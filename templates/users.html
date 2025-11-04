@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2 style="margin:0 0 .6rem 0">User management</h2>
+  <form method="post" class="row">
+    <input type="hidden" name="action" value="create">
+    <input name="username" placeholder="Username" required>
+    <input name="password" type="password" placeholder="Password" required>
+    <select name="role">
+      <option value="viewer">viewer (read-only)</option>
+      <option value="editor">editor (upload/edit)</option>
+      <option value="admin">admin (everything)</option>
+    </select>
+    <button type="submit">Create</button>
+  </form>
+
+  <table>
+    <thead><tr><th>Username</th><th>Role</th><th style="width:120px">Actions</th></tr></thead>
+    <tbody>
+    {% for u in users %}
+      <tr>
+        <td>{{ u['username'] }}</td>
+        <td><span class="badge">{{ u['role'] }}</span></td>
+        <td>
+          <form method="post" style="display:inline" onsubmit="return confirm('Delete user {{u['username']}}?')">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="id" value="{{ u['id'] }}">
+            <button class="btn btn-danger" {% if u['id']==current_user.id %}disabled{% endif %}>Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

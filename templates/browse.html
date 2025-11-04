@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid">
+  <div class="card">
+    <div class="row" style="justify-content:space-between; align-items:flex-end">
+      <div>
+        <div class="crumbs">
+          {% for c in crumbs %}
+            {% if not loop.first %}<span class="sep">/</span>{% endif %}
+            <a href="{{ url_for('browse', path=c.path) }}">{{ c.name }}</a>
+          {% endfor %}
+        </div>
+        <div class="muted" style="margin-top:.3rem">Path: /{{ current_rel }}</div>
+      </div>
+      <div class="row">
+        <input id="filter" type="text" placeholder="Live search…" oninput="filterRows()" />
+        <a class="btn" href="{{ url_for('download', path=current_rel, format='zip') }}">Download folder (ZIP)</a>
+        <a class="btn" href="{{ url_for('download', path=current_rel, format='tar') }}">Download folder (TAR)</a>
+      </div>
+    </div>
+
+    <table id="listing">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th class="muted">Size</th>
+          <th class="muted">Modified</th>
+          <th style="width:220px">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if current_rel %}
+          <tr>
+            <td colspan="4"><a href="{{ url_for('browse', path=relpath_from_root((ROOT_DIR + '/' + current_rel).rsplit('/',1)[0])) }}"></a></td>
+          </tr>
+        {% endif %}
+        {% for e in entries %}
+          <tr data-name="{{ e.name|lower }}">
+            <td>
+              <span style="margin-right:.4rem">{{ e.is_dir|icon(e.name) }}</span>
+              {% if e.is_dir %}
+                <a href="{{ url_for('browse', path=e.rel) }}">{{ e.name }}</a>
+              {% else %}
+                <a href="{{ url_for('download', path=e.rel, format='raw') }}">{{ e.name }}</a>
+              {% endif %}
+            </td>
+            <td class="muted">{{ e.size_h }}</td>
+            <td class="muted">{{ e.mtime_h }}</td>
+            <td class="row">
+              {% if not e.is_dir and can_edit %}
+                <a class="btn" href="{{ url_for('edit', path=e.rel) }}">Edit</a>
+              {% endif %}
+              {% if e.is_dir %}
+                <a class="btn" href="{{ url_for('download', path=e.rel, format='zip') }}">ZIP</a>
+                <a class="btn" href="{{ url_for('download', path=e.rel, format='tar') }}">TAR</a>
+              {% else %}
+                <a class="btn" href="{{ url_for('download', path=e.rel, format='zip') }}">ZIP</a>
+                <a class="btn" href="{{ url_for('download', path=e.rel, format='tar') }}">TAR</a>
+              {% endif %}
+              {% if can_delete %}
+                <button class="btn btn-danger" onclick="delPath('{{ e.rel|e }}')">Delete</button>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Upload</h3>
+    {% if can_edit %}
+    <div id="dropzone" class="dropzone">
+      <p class="muted">Drag & drop files or folders here</p>
+      <div class="row" style="justify-content:center">
+        <label class="btn btn-line">
+          Select files
+          <input id="fileInput" type="file" name="files[]" multiple style="display:none" />
+        </label>
+        <label class="btn btn-line">
+          Select folder
+          <input id="dirInput" type="file" name="files[]" webkitdirectory directory style="display:none" />
+        </label>
+      </div>
+      <progress id="progress" value="0" max="100" style="margin-top:.7rem; display:none"></progress>
+      <div id="uploadStatus" class="muted" style="margin-top:.4rem"></div>
+    </div>
+    {% else %}
+      <p class="muted">You are read-only (viewer).</p>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  const currentRel = "{{ current_rel }}";
+
+  function filterRows(){
+    const q = document.getElementById('filter').value.trim().toLowerCase();
+    const rows = document.querySelectorAll('#listing tbody tr');
+    rows.forEach(r => {
+      const n = r.getAttribute('data-name') || '';
+      r.style.display = n.includes(q) ? '' : 'none';
+    });
+  }
+
+  async function delPath(rel){
+    if(!confirm('Delete ' + rel + ' ? This cannot be undone.')) return;
+    const fd = new FormData();
+    fd.append('path', rel);
+    const res = await fetch('{{ url_for("delete") }}', {method:'POST', body: fd});
+    const j = await res.json();
+    if(j.ok){ location.reload(); }
+    else{ alert('Delete failed: ' + (j.error||'unknown')); }
+  }
+
+  // ---- Upload logic (files + folders; preserves structure) ----
+  const drop = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const dirInput = document.getElementById('dirInput');
+  const progress = document.getElementById('progress');
+  const statusEl = document.getElementById('uploadStatus');
+
+  function sendFiles(files){
+    const fd = new FormData();
+    for(const f of files){
+      fd.append('files[]', f, f.name);
+      // try to include relative path if present (webkitRelativePath)
+      if (f.webkitRelativePath){
+        fd.append('relative_path', f.webkitRelativePath);
+        // Also add per-file override for server-side mapping
+        fd.append('relpath_' + f.name, f.webkitRelativePath);
+      }
+    }
+    fd.append('target_dir', currentRel || '');
+
+    progress.style.display = 'block';
+    progress.value = 0;
+    statusEl.textContent = 'Uploading…';
+
+    return new Promise((resolve,reject)=>{
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '{{ url_for("upload") }}', true);
+      xhr.upload.onprogress = (e)=>{
+        if(e.lengthComputable){
+          progress.value = Math.round((e.loaded/e.total)*100);
+        }
+      };
+      xhr.onload = ()=>{
+        try{
+          const j = JSON.parse(xhr.responseText);
+          if (j.ok){
+            statusEl.textContent = 'Uploaded ' + j.uploaded + ' item(s).';
+            resolve(j);
+            setTimeout(()=>location.reload(), 500);
+          } else {
+            statusEl.textContent = 'Upload failed.';
+            reject(j);
+          }
+        }catch(err){
+          statusEl.textContent = 'Upload error.';
+          reject(err);
+        }
+      };
+      xhr.onerror = ()=>{ statusEl.textContent='Network error.'; reject(); };
+      xhr.send(fd);
+    });
+  }
+
+  // Drag & drop (including folders using DataTransferItem webkit entries)
+  drop.addEventListener('dragover', e=>{
+    e.preventDefault(); drop.classList.add('dragover');
+  });
+  drop.addEventListener('dragleave', e=>{
+    drop.classList.remove('dragover');
+  });
+  drop.addEventListener('drop', async (e)=>{
+    e.preventDefault(); drop.classList.remove('dragover');
+    const items = e.dataTransfer.items;
+    // If browser supports directory entries, traverse; else fallback to files list
+    if(items && items[0] && items[0].webkitGetAsEntry){
+      const files = [];
+      const traverse = (entry, pathPrefix='')=>{
+        return new Promise((resolve)=>{
+          if(entry.isFile){
+            entry.file(f=>{
+              Object.defineProperty(f, 'webkitRelativePath', {value: pathPrefix + f.name});
+              files.push(f);
+              resolve();
+            });
+          } else if(entry.isDirectory){
+            const dirReader = entry.createReader();
+            const entries = [];
+            const readBatch = ()=>{
+              dirReader.readEntries(async results=>{
+                if(!results.length){ // done
+                  for(const child of entries){
+                    await traverse(child, pathPrefix + entry.name + '/');
+                  }
+                  resolve();
+                } else {
+                  entries.push(...results);
+                  readBatch();
+                }
+              });
+            };
+            readBatch();
+          } else { resolve(); }
+        });
+      };
+      const promises = [];
+      for(const it of items){
+        const entry = it.webkitGetAsEntry();
+        if(entry){ promises.push(traverse(entry, '')); }
+      }
+      await Promise.all(promises);
+      await sendFiles(files);
+    } else {
+      await sendFiles(e.dataTransfer.files);
+    }
+  });
+
+  fileInput.addEventListener('change', async (e)=>{ await sendFiles(e.target.files); });
+  dirInput.addEventListener('change', async (e)=>{ await sendFiles(e.target.files); });
+</script>
+{% endblock %}

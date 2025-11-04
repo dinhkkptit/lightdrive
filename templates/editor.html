@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:900px; margin:0 auto;">
+  <h2 style="margin-top:0">Editing: <span class="muted">/{{ rel }}</span></h2>
+  {% if can_edit %}
+  <form method="post">
+    <input type="hidden" name="path" value="{{ rel }}">
+    <textarea name="content" style="width:100%; height:60vh; background:#0d141c; color:#e4eef9; border:1px solid #1f2a37; border-radius:12px; padding:.8rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size:14px;">{{ content }}</textarea>
+    <div class="row" style="margin-top:.6rem; justify-content:flex-end">
+      <button type="submit">Save</button>
+      <a class="btn" href="{{ url_for('browse', path=rel.rsplit('/',1)[0]) }}">Back</a>
+    </div>
+  </form>
+  {% else %}
+    <p class="muted">Read-only.</p>
+  {% endif %}
+</div>
+{% endblock %}

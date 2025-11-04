@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ app_title }}</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121923;
+      --muted: #9fb0c3;
+      --text: #e4eef9;
+      --accent: #4ba3ff;
+      --accent-2: #13d6a2;
+      --danger: #ff5577;
+      --ok: #2ecc71;
+      --border: #1f2a37;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: var(--text); background: linear-gradient(180deg, #0b0f14, #0e131a 40%, #0b0f14); min-height: 100vh;}
+    header { display:flex; gap:1rem; align-items:center; padding:1rem 1.25rem; border-bottom:1px solid var(--border); background:var(--panel); position:sticky; top:0; z-index:10; }
+    header h1 { margin:0; font-size:1.05rem; letter-spacing:0.3px; color: var(--muted); }
+    header .spacer { flex:1; }
+    a, a:visited { color: var(--accent); text-decoration: none; }
+    main { padding: 1rem; max-width: 1100px; margin: 0 auto; }
+    .card { background: rgba(18,25,35,0.9); border:1px solid var(--border); border-radius:14px; padding:1rem; box-shadow: 0 10px 22px rgba(0,0,0,0.25); }
+    .row { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+    button, .btn {
+      background: linear-gradient(180deg, #1a2633, #151e29);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: .55rem .8rem; cursor: pointer;
+    }
+    button:hover, .btn:hover { border-color: #2a3a4f; transform: translateY(-1px); }
+    .btn-danger { border-color:#6b1f2a; background: linear-gradient(180deg, #3a1117, #250b10); color:#ffdbe1; }
+    .btn-line { background: transparent; border:1px dashed var(--border); }
+    input[type="text"], input[type="password"] {
+      background: #0e141b; color: var(--text); border:1px solid var(--border);
+      border-radius:10px; padding:.5rem .6rem; outline:none;
+    }
+    table { width:100%; border-collapse: collapse; margin-top:.5rem; }
+    th, td { text-align:left; padding:.5rem .4rem; border-bottom: 1px solid var(--border); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .muted { color: var(--muted); }
+    .badge { padding:.1rem .5rem; border-radius:999px; border:1px solid var(--border); color: var(--muted); font-size:.75rem; }
+    .crumbs { display:flex; gap:.35rem; align-items:center; flex-wrap:wrap; }
+    .crumbs a { color: var(--text); }
+    .crumbs .sep { color: var(--muted); }
+    .toast { margin: .35rem 0; padding:.5rem .6rem; border-radius:10px; border:1px solid var(--border); background: #0d141c; }
+    .toast.success { border-color:#154330; color:#b6f1cc; }
+    .toast.error { border-color:#50212e; color:#ffd2dc; }
+    .grid { display:grid; gap:1rem; grid-template-columns: 1fr; }
+    @media(min-width: 900px){ .grid { grid-template-columns: 1fr 340px; } }
+    .dropzone {
+      border: 2px dashed #334155; border-radius: 12px; padding: 1rem; text-align:center;
+      background: rgba(13,19,28,0.8);
+    }
+    .dropzone.dragover { border-color: var(--accent); background: rgba(13,19,28,0.95); }
+    progress { width:100%; height: 10px; }
+    footer { padding: 1.2rem; color: #6b7b8c; text-align:center; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🗂️ {{ app_title }}</h1>
+    <div class="spacer"></div>
+    {% if current_user.is_authenticated %}
+      <span class="badge">Logged in as {{ current_user.username }} ({{ current_user.role }})</span>
+      <a class="btn" href="{{ url_for('browse') }}">Browse</a>
+      {% if current_user.role == 'admin' %}
+        <a class="btn" href="{{ url_for('users') }}">Users</a>
+      {% endif %}
+      <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+    {% endif %}
+  </header>
+
+  <main>
+    {% for cat, msg in get_flashed_messages(with_categories=true) %}
+      <div class="toast {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <small class="muted">LightDrive — local, simple, fast</small>
+  </footer>
+</body>
+</html>

@@ -1,198 +1,187 @@
-# 🗂️ Flask File Browser
+# 🗂️ LightDrive — Flask File Manager
 
-A lightweight **Flask-based file server** that lets you upload, download, browse, and manage files or folders directly from your web browser.
-
-## 🚀 Features
-
-✅ Upload **files or folders** from your browser (in one unified dialog)  
-✅ Browse the file system directly from the web UI  
-✅ Download individual files or entire folders (zipped or unzipped)  
-✅ View file details — name, size, modified time  
-✅ Breadcrumb navigation for easy folder movement  
-✅ Search bar to quickly find files  
-✅ Optional drag-and-drop uploads  
-✅ Clean Tailwind-styled UI  
+A simple, self-hosted **Flask-based file manager** for your local or remote server —  
+think of it as a lightweight Google Drive you can run anywhere.
 
 ---
 
-## 🧩 Project Structure
+## ✨ Features
 
-```
-my_site/
-│
-├── app.py                # Main Flask app
-├── templates/
-│   └── index.html        # Web interface (Jinja2)
-├── static/
-│   └── style.css         # Optional styling
-├── uploads/              # Default upload root
-│   └── (your uploaded files/folders)
-└── README.md
-```
+✅ **File & Folder Management**
+- Upload single or multiple files  
+- Upload folders (preserves structure)  
+- Drag & drop uploads with progress bar  
+- Browse directories with breadcrumb navigation  
+- Download files or folders (ZIP / TAR formats)  
+- Delete files or folders  
+- Live search filter  
+- View file metadata (size, modified date)
 
----
+✅ **User Accounts & Permissions**
+- Built-in login system (Flask-Login + SQLite)  
+- Roles:
+  - **Admin** → everything (add users, delete)
+  - **Editor** → upload / edit only
+  - **Viewer** → read-only  
+- First user automatically becomes admin
 
-## ⚙️ Installation
+✅ **Built-in Text Editor**
+- Edit text/code files directly in the browser  
+- Syntax-safe textarea (UTF-8, 2 MB limit)
 
-### 🪟 Windows
-
-1. Install Python 3.9+  
-2. Clone this repo:
-   ```bash
-   git clone https://github.com/yourname/flask-file-browser.git
-   cd flask-file-browser
-   ```
-3. Install dependencies:
-   ```bash
-   pip install flask
-   ```
-4. Run the app:
-   ```bash
-   python app.py
-   ```
-5. Open browser:
-   ```
-   http://127.0.0.1:5000
-   ```
-   or from another device on the same network:
-   ```
-   http://<your_local_ip>:5000
-   ```
+✅ **Responsive Dark UI**
+- Lightweight, clean, keyboard-friendly  
+- Works locally or on small servers / containers
 
 ---
 
-### 🐧 Linux
+## 🧰 Tech Stack
 
-1. Clone repo and install:
-   ```bash
-   git clone https://github.com/yourname/flask-file-browser.git
-   cd flask-file-browser
-   pip install flask
-   ```
-
-2. Run app:
-   ```bash
-   python3 app.py
-   ```
-
-3. Access in browser:
-   ```
-   http://<server-ip>:5000
-   ```
+- **Python 3.9+**
+- **Flask** + **Flask-Login**
+- **SQLite** (no external DB required)
+- HTML, CSS, JavaScript
 
 ---
 
-## 🔁 Auto Start on Boot
+## 🚀 Quick Start
 
-### 🪟 Windows (choose one)
+```bash
+# Clone this repository
+git clone https://github.com/YOURUSERNAME/lightdrive.git
+cd lightdrive
 
-#### Option 1 — Startup Folder
-1. Create `start_flask.bat`:
-   ```bat
-   @echo off
-   cd /d "C:\Users\Administrator\Downloads\my_site"
-   python app.py
-   ```
-2. Place it in:
-   ```
-   shell:startup
-   ```
+# Create environment
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-#### Option 2 — Background (Silent)
-Create `start_flask.vbs`:
-```vbs
-Set WshShell = CreateObject("WScript.Shell")
-WshShell.Run chr(34) & "C:\Users\Administrator\Downloads\my_site\start_flask.bat" & Chr(34), 0
-Set WshShell = Nothing
-```
-Add to `shell:startup`.
+# Install dependencies
+pip install flask flask-login werkzeug
 
----
+# Run the app
+python app.py
 
-### 🐧 Linux — systemd Service (Recommended)
 
-1. Create `/etc/systemd/system/flaskapp.service`:
-   ```ini
-   [Unit]
-   Description=Flask File Browser
-   After=network.target
+## ⚙️ Environment Variables (optional)
 
-   [Service]
-   User=ubuntu
-   WorkingDirectory=/home/ubuntu/Downloads/my_site
-   ExecStart=/usr/bin/python3 /home/ubuntu/Downloads/my_site/app.py
-   Restart=always
+|Variable|Default|Description|
+|---|---|---|
+|`FILE_ROOT`|`./storage`|Base directory for browsing/uploads|
+|`FILEMGR_DB`|`./users.db`|Path to SQLite database|
+|`SECRET_KEY`|`dev-secret-change-me`|Flask secret key|
+|`PORT`|`5000`|Web server port|
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
+Example:
 
-2. Enable and start:
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable flaskapp
-   sudo systemctl start flaskapp
-   ```
-
-3. View logs:
-   ```bash
-   journalctl -u flaskapp -f
-   ```
+`export FILE_ROOT="/mnt/data" export PORT=8080 python app.py`
 
 ---
 
-## 🌐 Access
+## 🧩 Folder Structure
 
-- Local: `http://127.0.0.1:5000`  
-- LAN: `http://<your-machine-ip>:5000`
-
----
-
-## 🧱 Requirements
-
-| Component | Version |
-|------------|----------|
-| Python     | 3.9+     |
-| Flask      | 2.x      |
-| Browser    | Chrome / Edge / Firefox |
+`lightdrive/ │ ├── app.py ├── users.db            # auto-created ├── storage/            # your files live here └── templates/     ├── base.html     ├── browse.html     ├── login.html     ├── users.html     ├── editor.html     └── error.html`
 
 ---
 
-## 🔒 Optional Enhancements
+## 🔒 Permissions
 
-- Add password protection (Flask-Login or HTTP Basic Auth)
-- Deploy behind Nginx for HTTPS access
-- Integrate with FastAPI or React frontend
-- Run in Docker for portability
-
----
-
-## 🧑‍💻 Author
-
-**Your Name**  
-📧 your.email@example.com  
-🌍 [github.com/yourname](https://github.com/yourname)
+|Role|Browse|Upload/Edit|Delete|Manage Users|
+|---|---|---|---|---|
+|**Viewer**|✅|❌|❌|❌|
+|**Editor**|✅|✅|❌|❌|
+|**Admin**|✅|✅|✅|✅|
 
 ---
 
-## 🪪 License
+## 🧠 Tips
 
-This project is licensed under the [MIT License](LICENSE).
+- Use `web.archive`, `pythonanywhere`, or any VPS to host privately.
+    
+- Always keep the app within a **sandboxed `ROOT_DIR`**.
+    
+- To reset users: delete `users.db` and restart.
+    
 
 ---
 
-## ⭐ Show Your Support
+## 🪄 Development / Customization
 
-If you found this useful, please ⭐ star the repo on GitHub — it helps others discover it!
+- Templates use Jinja2 and simple Tailwind-like CSS.
+    
+- You can edit UI easily in `base.html` or add new endpoints.
+    
+- To add features, use the **C.R.A.F.T. Prompt** below.
+    
 
 ---
 
-### 🔁 C.R.A.F.T Summary
+## 🧩 Reuse Prompt (for ChatGPT)
 
-| Principle | Applied As |
-|------------|-------------|
-| **C**oncise | Focused on setup, run, and deployment steps only |
-| **R**eadable | Markdown sections, emojis, code blocks |
-| **A**ctionable | Clear commands and folder examples |
-| **F**lexible | Supports Windows + Linux + extensions |
-| **T**ested | Commands verified for real Flask usage |
+If you want to update or expand this project using ChatGPT,  
+keep the **CRAFT_PROMPT.txt** (below) handy for future context.
+
+`Using my CRAFT Flask file browser context, update my Flask app to include: [your feature here].`
+
+Example:
+
+> “Using my CRAFT Flask file browser context, add syntax highlighting in the text editor.”
+
+---
+
+## 🧑‍💻 License
+
+MIT License — free for personal or commercial use.  
+Just keep attribution if you fork or publish derivatives.
+
+**LightDrive** — lightweight. local. yours.
+
+---
+
+## ⚙️ `CRAFT_PROMPT.txt`
+
+```text
+### 🧩 C.R.A.F.T. Prompt
+
+**C — Context**  
+I’m building a simple Flask-based local file manager website that allows me to upload, download, browse, and manage files or folders on my host. It should support both files and folders, show folder structure, file metadata, and be user-friendly like a lightweight Google Drive.
+
+**R — Request**  
+Help me create, update, or debug a Flask app (`app.py` + `browse.html` + other templates) that provides:
+
+1. File/folder upload (manual and drag & drop)
+2. File/folder browsing with breadcrumbs
+3. File download (as file, ZIP, or TAR)
+4. Delete functionality
+5. File size and last-modified timestamps
+6. Live search filtering
+7. Pretty, responsive interface (HTML/CSS/JS)
+8. Account creation and permission-based login (admin/editor/viewer)
+9. Online text editor directly on the site
+
+**A — Action**  
+When I ask to “update,” give me a **fully working and ready-to-run** code version (not snippets), combining backend (`app.py`) and frontend (`browse.html`, etc.).  
+Ensure:
+
+- URLs always use `/`, not `\`  
+- Uploads preserve folder structure  
+- Downloads work for both files and folders  
+- Browsing dynamically reflects filesystem  
+- Only authorized users can modify/delete files
+
+**F — Format**  
+- Complete, copy-pasteable code blocks (Python + HTML/JS)  
+- Short explanations of changes  
+- Optional UI improvements when requested
+
+**T — Tone**  
+Developer-friendly, clear, practical.  
+Focus on real usability and stability.
+
+---
+
+### ✅ Example Usage
+
+> “Using my CRAFT Flask file browser context, add password protection and dark theme.”  
+> “Update it to support TAR and ZIP folder downloads side by side.”  
+> “Make drag-and-drop show a progress bar.”  
+> “Add syntax highlighting to the file editor.”
