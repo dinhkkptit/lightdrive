@@ -1,8 +1,6 @@
-
----
-
 ## ⚙️ `CRAFT_PROMPT.txt`
 
+```text
 ### 🧩 C.R.A.F.T. Prompt
 
 **C — Context**  
