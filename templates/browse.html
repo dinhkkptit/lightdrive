@@ -19,13 +19,13 @@
       </div>
     </div>
 
-    <table id="listing">
+    <table id="listing" class="compact-table">
       <thead>
         <tr>
           <th>Name</th>
           <th class="muted">Size</th>
           <th class="muted">Modified</th>
-          <th style="width:220px">Actions</th>
+          <th style="width:240px">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -49,20 +49,22 @@
             </td>
             <td class="muted">{{ e.size_h }}</td>
             <td class="muted">{{ e.mtime_h }}</td>
-            <td class="row">
-              {% if not e.is_dir and can_edit %}
-                <a class="btn" href="{{ url_for('edit', path=e.rel) }}">Edit</a>
-              {% endif %}
-              {% if e.is_dir %}
-                <a class="btn" href="{{ url_for('download', path=e.rel, format='zip') }}">ZIP</a>
-                <a class="btn" href="{{ url_for('download', path=e.rel, format='tar') }}">TAR</a>
-              {% else %}
-                <a class="btn" href="{{ url_for('download', path=e.rel, format='zip') }}">ZIP</a>
-                <a class="btn" href="{{ url_for('download', path=e.rel, format='tar') }}">TAR</a>
-              {% endif %}
-              {% if can_delete %}
-                <button class="btn btn-danger" onclick="delPath('{{ e.rel|e }}')">Delete</button>
-              {% endif %}
+            <td>
+              <div class="actions-row">
+                {% if not e.is_dir and can_edit %}
+                  <a class="btn btn-small" href="{{ url_for('edit', path=e.rel) }}">Edit</a>
+                {% endif %}
+                {% if e.is_dir %}
+                  <a class="btn btn-small" href="{{ url_for('download', path=e.rel, format='zip') }}">ZIP</a>
+                  <a class="btn btn-small" href="{{ url_for('download', path=e.rel, format='tar') }}">TAR</a>
+                {% else %}
+                  <a class="btn btn-small" href="{{ url_for('download', path=e.rel, format='zip') }}">ZIP</a>
+                  <a class="btn btn-small" href="{{ url_for('download', path=e.rel, format='tar') }}">TAR</a>
+                {% endif %}
+                {% if can_delete %}
+                  <button class="btn btn-small btn-danger" onclick="delPath('{{ e.rel|e }}')">Delete</button>
+                {% endif %}
+              </div>
             </td>
           </tr>
         {% endfor %}
@@ -76,11 +78,11 @@
     <div id="dropzone" class="dropzone">
       <p class="muted">Drag & drop files or folders here</p>
       <div class="row" style="justify-content:center">
-        <label class="btn btn-line">
+        <label class="btn btn-line btn-small">
           Select files
           <input id="fileInput" type="file" name="files[]" multiple style="display:none" />
         </label>
-        <label class="btn btn-line">
+        <label class="btn btn-line btn-small">
           Select folder
           <input id="dirInput" type="file" name="files[]" webkitdirectory directory style="display:none" />
         </label>
@@ -93,6 +95,29 @@
     {% endif %}
   </div>
 </div>
+
+<style>
+  /* --- Compact mode tweaks --- */
+  .compact-table th, .compact-table td {
+    padding: 0.35rem 0.4rem;
+    font-size: 0.9rem;
+  }
+  .actions-row {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .btn-small {
+    font-size: 0.8rem !important;
+    padding: 0.3rem 0.55rem !important;
+    border-radius: 8px !important;
+  }
+  .btn-danger {
+    color: #ffb0ba;
+  }
+</style>
 
 <script>
   const currentRel = "{{ current_rel }}";
